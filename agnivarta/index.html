@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agnivarta AI – Intelligent Fire Network</title>
+<style>
+/* ── Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  --primary:       #0073e6;
+  --primary-dark:  #005bb5;
+  --primary-light: #e8f2fd;
+  --sky:           #38bdf8;
+  --sky-light:     #e0f4ff;
+  --white:         #ffffff;
+  --off-white:     #f5f8fc;
+  --gray-50:       #f0f4f8;
+  --gray-100:      #e2e8f0;
+  --gray-200:      #cbd5e1;
+  --gray-400:      #94a3b8;
+  --gray-600:      #475569;
+  --gray-800:      #1e293b;
+  --green:         #16a34a;
+  --green-light:   #dcfce7;
+  --yellow:        #d97706;
+  --yellow-light:  #fef3c7;
+  --red:           #dc2626;
+  --red-light:     #fee2e2;
+  --critical:      #7c3aed;
+  --critical-light:#ede9fe;
+  --sidebar-w:     240px;
+  --topbar-h:      60px;
+  --radius:        10px;
+  --shadow:        0 2px 12px rgba(0,115,230,.10);
+  --shadow-sm:     0 1px 4px rgba(0,0,0,.08);
+  --font:          'Inter', 'Segoe UI', sans-serif;
+  --transition:    .2s ease;
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { font-size:15px; }
+body { font-family:var(--font); background:var(--off-white); color:var(--gray-800); min-height:100vh; }
+button { cursor:pointer; font-family:inherit; border:none; }
+input, select, textarea { font-family:inherit; }
+a { text-decoration:none; color:inherit; }
+table { border-collapse:collapse; width:100%; }
+
+/* ── Scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--gray-50); }
+::-webkit-scrollbar-thumb { background:var(--gray-200); border-radius:3px; }
+
+/* ── Page Containers ───────────────────────────────────────────────── */
+.page { display:none; }
+.page.active { display:block; }
+.app-shell { display:flex; min-height:100vh; }
+
+/* ── Sidebar ───────────────────────────────────────────────────────── */
+.sidebar {
+  width:var(--sidebar-w); background:var(--white);
+  border-right:1px solid var(--gray-100); display:flex; flex-direction:column;
+  position:fixed; left:0; top:0; bottom:0; z-index:100; transition:transform var(--transition);
+}
+.sidebar-logo {
+  height:var(--topbar-h); display:flex; align-items:center; gap:10px;
+  padding:0 18px; border-bottom:1px solid var(--gray-100);
+  font-size:.9rem; font-weight:700; color:var(--primary);
+}
+.sidebar-logo .logo-icon {
+  width:32px; height:32px; background:var(--primary); border-radius:8px;
+  display:flex; align-items:center; justify-content:center; color:#fff; font-size:.95rem;
+  flex-shrink:0;
+}
+.sidebar-section { padding:16px 12px 4px; font-size:.68rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:.08em; color:var(--gray-400); }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:9px 16px; border-radius:8px;
+  margin:1px 8px; font-size:.82rem; font-weight:500; color:var(--gray-600);
+  cursor:pointer; transition:background var(--transition), color var(--transition);
+}
+.nav-item:hover { background:var(--gray-50); color:var(--gray-800); }
+.nav-item.active { background:var(--primary-light); color:var(--primary); font-weight:600; }
+.nav-item .icon { font-size:1rem; width:20px; text-align:center; }
+.nav-badge {
+  margin-left:auto; background:var(--red); color:#fff; font-size:.62rem;
+  padding:1px 6px; border-radius:10px; font-weight:700;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────────── */
+.topbar {
+  position:fixed; top:0; left:var(--sidebar-w); right:0;
+  height:var(--topbar-h); background:var(--white); border-bottom:1px solid var(--gray-100);
+  display:flex; align-items:center; padding:0 24px; gap:16px; z-index:99;
+}
+.topbar-title { font-size:.95rem; font-weight:600; color:var(--gray-800); flex:1; }
+.topbar-status {
+  display:flex; align-items:center; gap:6px; font-size:.75rem;
+  padding:5px 12px; background:var(--green-light); color:var(--green);
+  border-radius:20px; font-weight:600;
+}
+.pulse {
+  width:8px; height:8px; border-radius:50%; background:var(--green);
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.topbar-user {
+  display:flex; align-items:center; gap:8px; padding:5px 12px;
+  background:var(--gray-50); border-radius:20px; font-size:.8rem; cursor:pointer;
+}
+.avatar {
+  width:28px; height:28px; border-radius:50%; background:var(--primary);
+  display:flex; align-items:center; justify-content:center; color:#fff; font-size:.75rem; font-weight:700;
+}
+.alert-bell {
+  position:relative; padding:6px; background:var(--gray-50); border-radius:8px;
+  font-size:1rem; cursor:pointer; color:var(--gray-600);
+}
+.alert-bell .badge {
+  position:absolute; top:-4px; right:-4px; background:var(--red); color:#fff;
+  font-size:.6rem; font-weight:700; padding:1px 4px; border-radius:10px;
+}
+
+/* ── Main Content ───────────────────────────────────────────────────── */
+.main-content {
+  margin-left:var(--sidebar-w); margin-top:var(--topbar-h);
+  padding:24px; min-height:calc(100vh - var(--topbar-h));
+  flex:1;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────── */
+.card {
+  background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100);
+  box-shadow:var(--shadow); padding:20px;
+}
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-title { font-size:.85rem; font-weight:600; color:var(--gray-600); text-transform:uppercase;
+  letter-spacing:.05em; }
+.card-value { font-size:2rem; font-weight:700; color:var(--gray-800); line-height:1.1; }
+.card-sub { font-size:.75rem; color:var(--gray-400); margin-top:4px; }
+
+/* ── Metric Grid ───────────────────────────────────────────────────── */
+.metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px; }
+.metric-card {
+  background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100);
+  box-shadow:var(--shadow-sm); padding:18px 20px; display:flex; flex-direction:column; gap:6px;
+}
+.metric-icon {
+  width:36px; height:36px; border-radius:9px; display:flex; align-items:center;
+  justify-content:center; font-size:1.1rem; margin-bottom:4px;
+}
+.metric-label { font-size:.72rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; }
+.metric-value { font-size:1.7rem; font-weight:700; color:var(--gray-800); }
+.metric-trend { font-size:.72rem; color:var(--gray-400); }
+
+/* ── Tables ─────────────────────────────────────────────────────────── */
+.table-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100); box-shadow:var(--shadow-sm); overflow:hidden; }
+.table-card-header { padding:16px 20px; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; }
+.table-card-title { font-size:.85rem; font-weight:600; color:var(--gray-800); }
+.data-table th { background:var(--gray-50); padding:10px 16px; font-size:.72rem; font-weight:600; color:var(--gray-600); text-transform:uppercase; letter-spacing:.05em; text-align:left; }
+.data-table td { padding:12px 16px; font-size:.8rem; color:var(--gray-800); border-top:1px solid var(--gray-100); }
+.data-table tr:hover td { background:var(--gray-50); }
+
+/* ── Badges ─────────────────────────────────────────────────────────── */
+.badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:.7rem; font-weight:600; }
+.badge-green  { background:var(--green-light);    color:var(--green); }
+.badge-yellow { background:var(--yellow-light);   color:var(--yellow); }
+.badge-red    { background:var(--red-light);      color:var(--red); }
+.badge-purple { background:var(--critical-light); color:var(--critical); }
+.badge-blue   { background:var(--primary-light);  color:var(--primary); }
+.badge-gray   { background:var(--gray-100);       color:var(--gray-600); }
+.badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 18px; border-radius:8px; font-size:.8rem; font-weight:600; transition:all var(--transition); }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-outline { background:transparent; color:var(--primary); border:1.5px solid var(--primary); }
+.btn-outline:hover { background:var(--primary-light); }
+.btn-danger { background:var(--red); color:#fff; }
+.btn-danger:hover { opacity:.88; }
+.btn-sm { padding:5px 12px; font-size:.75rem; }
+.btn-success { background:var(--green); color:#fff; }
+
+/* ── Forms ───────────────────────────────────────────────────────────── */
+.form-group { margin-bottom:16px; }
+.form-label { display:block; font-size:.78rem; font-weight:600; color:var(--gray-600); margin-bottom:6px; }
+.form-input {
+  width:100%; padding:10px 14px; border:1.5px solid var(--gray-200); border-radius:8px;
+  font-size:.85rem; color:var(--gray-800); background:var(--white); outline:none;
+  transition:border-color var(--transition);
+}
+.form-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(0,115,230,.12); }
+
+/* ── Alert Feed ──────────────────────────────────────────────────────── */
+.alert-item {
+  display:flex; align-items:flex-start; gap:12px; padding:12px 16px;
+  border-left:3px solid transparent; border-radius:0; transition:background var(--transition);
+}
+.alert-item:hover { background:var(--gray-50); }
+.alert-item.critical { border-left-color:var(--critical); }
+.alert-item.high     { border-left-color:var(--red); }
+.alert-item.medium   { border-left-color:var(--yellow); }
+.alert-item.low      { border-left-color:var(--green); }
+.alert-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.alert-dot.critical { background:var(--critical); }
+.alert-dot.high     { background:var(--red); }
+.alert-dot.medium   { background:var(--yellow); }
+.alert-dot.low      { background:var(--green); }
+.alert-text { font-size:.78rem; color:var(--gray-800); line-height:1.5; }
+.alert-time { font-size:.68rem; color:var(--gray-400); margin-top:2px; }
+
+/* ── Charts (CSS bar charts) ─────────────────────────────────────────── */
+.chart-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.chart-bar-label { font-size:.72rem; color:var(--gray-600); width:80px; flex-shrink:0; text-align:right; }
+.chart-bar-track { flex:1; background:var(--gray-100); border-radius:4px; height:10px; overflow:hidden; }
+.chart-bar-fill  { height:100%; border-radius:4px; transition:width .6s ease; }
+.chart-bar-val   { font-size:.72rem; color:var(--gray-600); width:36px; flex-shrink:0; }
+
+/* ── Sparkline placeholder ──────────────────────────────────────────── */
+.sparkline { display:flex; align-items:flex-end; gap:2px; height:40px; padding:0 2px; }
+.spark-bar { flex:1; background:var(--primary-light); border-radius:2px 2px 0 0; transition:height .4s; }
+.sparkline.danger .spark-bar { background:var(--red-light); }
+
+/* ── Section headers ─────────────────────────────────────────────────── */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.section-title { font-size:1.15rem; font-weight:700; color:var(--gray-800); }
+.section-sub { font-size:.78rem; color:var(--gray-400); margin-top:2px; }
+
+/* ── Two-col grid ────────────────────────────────────────────────────── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+@media(max-width:1100px){ .two-col{ grid-template-columns:1fr; } .three-col{ grid-template-columns:1fr 1fr; } }
+@media(max-width:700px){ .metric-grid{ grid-template-columns:1fr 1fr; } .three-col{ grid-template-columns:1fr; } }
+
+/* ── Auth pages ───────────────────────────────────────────────────────── */
+.auth-page {
+  min-height:100vh; background:linear-gradient(135deg, #e8f2fd 0%, #f0f8ff 50%, #e0f4ff 100%);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.auth-box {
+  background:var(--white); border-radius:16px; box-shadow:0 8px 40px rgba(0,115,230,.14);
+  width:100%; max-width:420px; padding:40px;
+}
+.auth-logo { text-align:center; margin-bottom:28px; }
+.auth-logo .logo-big { font-size:1.6rem; font-weight:800; color:var(--primary); letter-spacing:-.5px; }
+.auth-logo .logo-sub { font-size:.78rem; color:var(--gray-400); margin-top:4px; }
+.auth-title { font-size:1.2rem; font-weight:700; color:var(--gray-800); margin-bottom:4px; }
+.auth-desc  { font-size:.78rem; color:var(--gray-400); margin-bottom:24px; }
+.auth-divider { display:flex; align-items:center; gap:10px; margin:18px 0; }
+.auth-divider hr { flex:1; border:none; border-top:1px solid var(--gray-100); }
+.auth-divider span { font-size:.72rem; color:var(--gray-400); }
+.auth-link { font-size:.8rem; color:var(--gray-600); text-align:center; margin-top:16px; }
+.auth-link a { color:var(--primary); font-weight:600; cursor:pointer; }
+.error-msg { background:var(--red-light); color:var(--red); border-radius:8px; padding:10px 14px; font-size:.78rem; margin-bottom:14px; display:none; }
+
+/* ── Landing Page ────────────────────────────────────────────────────── */
+.landing { min-height:100vh; background:var(--white); }
+.landing-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 48px; border-bottom:1px solid var(--gray-100);
+  position:sticky; top:0; background:var(--white); z-index:50;
+}
+.landing-logo { font-size:1.2rem; font-weight:800; color:var(--primary); }
+.landing-logo span { color:var(--gray-800); }
+.landing-hero {
+  padding:80px 48px; max-width:1100px; margin:0 auto; display:grid;
+  grid-template-columns:1fr 1fr; gap:40px; align-items:center;
+}
+.hero-title { font-size:2.6rem; font-weight:800; color:var(--gray-800); line-height:1.15; margin-bottom:16px; }
+.hero-title span { color:var(--primary); }
+.hero-desc { font-size:.92rem; color:var(--gray-600); line-height:1.7; margin-bottom:28px; }
+.hero-badges { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px; }
+.hero-badge { padding:5px 14px; background:var(--primary-light); color:var(--primary); border-radius:20px; font-size:.72rem; font-weight:600; }
+.hero-actions { display:flex; gap:12px; }
+.hero-visual {
+  background:linear-gradient(135deg, var(--primary) 0%, #0a5ab5 100%);
+  border-radius:20px; padding:28px; color:#fff;
+}
+.hero-stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.hero-stat { background:rgba(255,255,255,.12); border-radius:12px; padding:16px; }
+.hero-stat-val { font-size:1.6rem; font-weight:700; }
+.hero-stat-lbl { font-size:.72rem; opacity:.75; margin-top:3px; }
+.features-section { padding:60px 48px; max-width:1100px; margin:0 auto; }
+.features-title { text-align:center; font-size:1.8rem; font-weight:700; margin-bottom:8px; }
+.features-sub { text-align:center; color:var(--gray-400); font-size:.85rem; margin-bottom:40px; }
+.features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.feature-card {
+  border:1px solid var(--gray-100); border-radius:var(--radius); padding:24px;
+  transition:box-shadow var(--transition), border-color var(--transition);
+}
+.feature-card:hover { box-shadow:var(--shadow); border-color:var(--gray-200); }
+.feature-icon { font-size:1.5rem; margin-bottom:12px; }
+.feature-title { font-size:.9rem; font-weight:700; color:var(--gray-800); margin-bottom:6px; }
+.feature-desc { font-size:.78rem; color:var(--gray-600); line-height:1.6; }
+.landing-footer { background:var(--gray-800); color:var(--gray-400); text-align:center; padding:28px; font-size:.75rem; }
+
+/* ── Project Description Page ────────────────────────────────────────── */
+.desc-page { min-height:100vh; background:var(--off-white); }
+.desc-hero {
+  background:linear-gradient(135deg, var(--primary) 0%, #0a5ab5 100%);
+  padding:64px 48px; color:#fff;
+}
+.desc-hero-inner { max-width:900px; margin:0 auto; }
+.desc-eyebrow { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.12em; opacity:.75; margin-bottom:12px; }
+.desc-hero-title { font-size:2.4rem; font-weight:800; line-height:1.15; margin-bottom:16px; letter-spacing:-.5px; }
+.desc-hero-subtitle { font-size:1rem; opacity:.85; line-height:1.7; max-width:680px; }
+.desc-body { max-width:900px; margin:0 auto; padding:48px; }
+.desc-intro {
+  background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100);
+  box-shadow:var(--shadow-sm); padding:32px; margin-bottom:32px;
+  font-size:.9rem; color:var(--gray-600); line-height:1.8;
+}
+.desc-intro strong { color:var(--gray-800); }
+.desc-section-title {
+  font-size:1rem; font-weight:700; color:var(--gray-800);
+  margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid var(--primary-light);
+}
+.desc-features-grid {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:14px; margin-bottom:32px;
+}
+.desc-feature-item {
+  background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100);
+  padding:18px 20px; display:flex; align-items:flex-start; gap:12px;
+  box-shadow:var(--shadow-sm); transition:box-shadow var(--transition);
+}
+.desc-feature-item:hover { box-shadow:var(--shadow); }
+.desc-feature-dot {
+  width:8px; height:8px; border-radius:50%; background:var(--primary);
+  flex-shrink:0; margin-top:5px;
+}
+.desc-feature-text { font-size:.8rem; font-weight:600; color:var(--gray-800); line-height:1.4; }
+.desc-goals-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:32px; }
+.desc-goal-card {
+  background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100);
+  padding:20px; box-shadow:var(--shadow-sm);
+}
+.desc-goal-label { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--red); margin-bottom:6px; }
+.desc-goal-text { font-size:.82rem; color:var(--gray-600); line-height:1.6; }
+.desc-components { background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100); padding:28px; margin-bottom:32px; box-shadow:var(--shadow-sm); }
+.desc-component-row { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid var(--gray-100); align-items:flex-start; }
+.desc-component-row:last-child { border-bottom:none; }
+.desc-component-num { font-size:.72rem; font-weight:700; color:var(--primary); background:var(--primary-light); border-radius:6px; padding:3px 9px; flex-shrink:0; margin-top:1px; }
+.desc-component-name { font-size:.82rem; font-weight:700; color:var(--gray-800); margin-bottom:3px; }
+.desc-component-desc { font-size:.76rem; color:var(--gray-400); line-height:1.5; }
+.desc-bottom-nav { display:flex; gap:12px; flex-wrap:wrap; }
+@media(max-width:700px){
+  .desc-hero { padding:40px 24px; }
+  .desc-body { padding:24px; }
+  .desc-goals-grid { grid-template-columns:1fr; }
+  .desc-hero-title { font-size:1.7rem; }
+}
+
+/* ── Attack Simulation Panel ─────────────────────────────────────────── */
+.sim-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+.sim-btn {
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  padding:20px 16px; border-radius:var(--radius); border:1.5px solid var(--gray-200);
+  background:var(--white); cursor:pointer; transition:all var(--transition);
+  font-family:var(--font);
+}
+.sim-btn:hover { border-color:var(--primary); background:var(--primary-light); }
+.sim-btn.running { border-color:var(--red); background:var(--red-light); animation:simPulse .8s infinite; }
+@keyframes simPulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+.sim-name { font-size:.82rem; font-weight:600; color:var(--gray-800); text-align:center; }
+.sim-desc { font-size:.7rem; color:var(--gray-400); text-align:center; }
+
+/* ── Risk Score Gauge ─────────────────────────────────────────────────── */
+.risk-gauge {
+  display:flex; flex-direction:column; align-items:center; padding:16px;
+  background:var(--white); border-radius:var(--radius); border:1px solid var(--gray-100);
+}
+.risk-circle {
+  width:90px; height:90px; border-radius:50%; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; font-weight:700; border:4px solid;
+}
+.risk-circle.trusted  { color:var(--green);  border-color:var(--green); }
+.risk-circle.suspicious{ color:var(--yellow); border-color:var(--yellow); }
+.risk-circle.dangerous { color:var(--red);   border-color:var(--red); }
+.risk-num { font-size:1.4rem; line-height:1; }
+.risk-lbl { font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; }
+
+/* ── Toast Notifications ─────────────────────────────────────────────── */
+#toast-container { position:fixed; top:72px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast {
+  background:var(--white); border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,.15);
+  border-left:4px solid var(--primary); padding:12px 16px; min-width:280px; max-width:380px;
+  font-size:.78rem; animation:slideIn .3s ease; display:flex; gap:10px; align-items:flex-start;
+}
+.toast.critical { border-left-color:var(--critical); }
+.toast.high     { border-left-color:var(--red); }
+.toast.medium   { border-left-color:var(--yellow); }
+.toast-title { font-weight:700; font-size:.8rem; margin-bottom:2px; }
+@keyframes slideIn { from{transform:translateX(120%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ── Progress bar ─────────────────────────────────────────────────────── */
+.progress { background:var(--gray-100); border-radius:4px; height:8px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:4px; transition:width .6s; }
+.progress-fill.green  { background:var(--green); }
+.progress-fill.yellow { background:var(--yellow); }
+.progress-fill.red    { background:var(--red); }
+
+/* ── Timeline / Activity feed ─────────────────────────────────────────── */
+.activity-item {
+  display:flex; gap:14px; padding:12px 0; border-bottom:1px solid var(--gray-100);
+}
+.activity-item:last-child { border-bottom:none; }
+.activity-time { font-size:.68rem; color:var(--gray-400); min-width:52px; padding-top:2px; }
+.activity-body { flex:1; }
+.activity-title { font-size:.8rem; font-weight:600; color:var(--gray-800); }
+.activity-desc  { font-size:.72rem; color:var(--gray-400); margin-top:2px; }
+
+/* ── Security score bar ─────────────────────────────────────────────── */
+.score-bar { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--gray-100); }
+.score-bar:last-child { border-bottom:none; }
+.score-bar-label { font-size:.78rem; color:var(--gray-600); min-width:130px; }
+.score-bar-track { flex:1; }
+.score-bar-val { font-size:.78rem; font-weight:600; min-width:36px; text-align:right; }
+
+/* ── WS indicator ─────────────────────────────────────────────────────── */
+#ws-status { font-size:.68rem; color:var(--green); font-weight:600; }
+#ws-status.disconnected { color:var(--red); }
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     LANDING PAGE
+════════════════════════════════════════════════════════════════════ -->
+<div id="page-landing" class="page active">
+  <div class="landing">
+    <nav class="landing-nav">
+      <div class="landing-logo">Nova<span>Bank</span> &times; <span style="color:var(--primary)">Agnivarta AI</span></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" onclick="showPage('login')">Sign In</button>
+        <button class="btn btn-primary" onclick="showPage('signup')">Open Account</button>
+        <button class="btn btn-outline" onclick="showPage('about')" style="border-color:var(--primary);color:var(--primary)">About Project</button>
+        <button class="btn btn-outline" onclick="showPage('security-dashboard')" style="border-color:var(--red);color:var(--red)">Security Dashboard</button>
+      </div>
+    </nav>
+    <div class="landing-hero">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:var(--primary-light);color:var(--primary);padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:600;margin-bottom:20px;">
+          AI-Powered Identity Trust &amp; Cybersecurity
+        </div>
+        <h1 class="hero-title">Banking Protected by <span>Intelligent Fire</span></h1>
+        <p class="hero-desc">Agnivarta AI delivers real-time behavioral analytics, adaptive trust validation, and autonomous cyber defense for modern banking platforms. Zero compromises on security.</p>
+        <div class="hero-badges">
+          <span class="hero-badge">Real-Time Threat Detection</span>
+          <span class="hero-badge">AI Risk Scoring</span>
+          <span class="hero-badge">Behavioral Analytics</span>
+          <span class="hero-badge">Auto Defense</span>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-primary" style="padding:12px 28px" onclick="showPage('login')">Access NovaBank</button>
+          <button class="btn btn-outline" style="padding:12px 28px" onclick="showPage('security-dashboard')">View Security AI</button>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div style="font-size:.8rem;opacity:.75;margin-bottom:16px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Live Threat Dashboard</div>
+        <div class="hero-stats-grid">
+          <div class="hero-stat"><div class="hero-stat-val" id="hero-active-sessions">24</div><div class="hero-stat-lbl">Active Sessions</div></div>
+          <div class="hero-stat"><div class="hero-stat-val" id="hero-threats">7</div><div class="hero-stat-lbl">Threats Blocked</div></div>
+          <div class="hero-stat"><div class="hero-stat-val">99.8%</div><div class="hero-stat-lbl">Uptime</div></div>
+          <div class="hero-stat"><div class="hero-stat-val">2.1ms</div><div class="hero-stat-lbl">AI Response</div></div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:14px;">
+          <div style="font-size:.72rem;opacity:.7;margin-bottom:8px">Threat classification</div>
+          <div style="display:flex;gap:6px;align-items:center;font-size:.78rem;margin-bottom:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:#4ade80"></div> Trusted (68%)
+            <div style="margin-left:auto;font-weight:700">68%</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;font-size:.78rem;margin-bottom:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24"></div> Suspicious (23%)
+            <div style="margin-left:auto;font-weight:700">23%</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;font-size:.78rem">
+            <div style="width:8px;height:8px;border-radius:50%;background:#f87171"></div> Dangerous (9%)
+            <div style="margin-left:auto;font-weight:700">9%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="features-section">
+      <h2 class="features-title">Complete Cybersecurity Ecosystem</h2>
+      <p class="features-sub">Enterprise-grade protection built for banking. Every layer defended by AI.</p>
+      <div class="features-grid">
+        <div class="feature-card"><div class="feature-title">Identity Trust Engine</div><div class="feature-desc">Continuous behavioral profiling validates identity in real time. Anomalies trigger immediate investigation.</div></div>
+        <div class="feature-card"><div class="feature-title">AI Risk Scoring</div><div class="feature-desc">Composite risk scores from 40+ behavioral signals. Green, Yellow, Red classification in milliseconds.</div></div>
+        <div class="feature-card"><div class="feature-title">Fake Identity Detection</div><div class="feature-desc">Pattern-match against disposable emails, bot signatures, synthetic identity indicators.</div></div>
+        <div class="feature-card"><div class="feature-title">Autonomous Defense</div><div class="feature-desc">When risk threshold is breached, the system auto-blocks sessions, elevates alerts, and notifies security teams.</div></div>
+        <div class="feature-card"><div class="feature-title">Real-Time WebSocket Feed</div><div class="feature-desc">Dashboard updates stream live. Threats, sessions, and traffic monitored with sub-second latency.</div></div>
+        <div class="feature-card"><div class="feature-title">AI Audit Assistant</div><div class="feature-desc">Automated security audits identify weak authentication, session gaps, and compliance issues instantly.</div></div>
+      </div>
+    </div>
+    <footer class="landing-footer">Agnivarta AI &copy; 2024 &mdash; Intelligent Fire Network &mdash; NovaBank Security Platform &mdash; Prototype Build v1.0</footer>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ABOUT / PROJECT DESCRIPTION PAGE
+════════════════════════════════════════════════════════════════════ -->
+<div id="page-about" class="page">
+  <div class="desc-page">
+    <!-- Nav -->
+    <nav class="landing-nav">
+      <div class="landing-logo">Nova<span>Bank</span> &times; <span style="color:var(--primary)">Agnivarta AI</span></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" onclick="showPage('landing')">Home</button>
+        <button class="btn btn-outline" onclick="showPage('login')">Sign In</button>
+        <button class="btn btn-primary" onclick="showPage('security-dashboard')">Security Dashboard</button>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="desc-hero">
+      <div class="desc-hero-inner">
+        <div class="desc-eyebrow">Project Overview</div>
+        <h1 class="desc-hero-title">Agnivarta AI<br>Intelligent Identity Trust &amp; Cyber Defense Ecosystem</h1>
+        <p class="desc-hero-subtitle">An AI-powered cybersecurity platform that continuously analyzes user behavior, device trust, login patterns, and session activity to protect banking applications from modern threats in real time.</p>
+        <div style="display:flex;gap:10px;margin-top:28px;flex-wrap:wrap">
+          <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3)" onclick="showPage('login')">Try the Banking Demo</button>
+          <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3)" onclick="showPage('security-dashboard')">Open Security Dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="desc-body">
+
+      <!-- Overview paragraph -->
+      <div class="desc-intro">
+        <p style="margin-bottom:14px">
+          <strong>Agnivarta AI</strong> is an AI-powered Identity Trust and Cyber Defense Platform designed to protect banking applications and digital services from modern cyber threats. The system continuously analyzes user behavior, device trust, login patterns, and session activities to determine the risk level of every access attempt in real time.
+        </p>
+        <p style="margin-bottom:14px">
+          Unlike traditional security systems that rely only on passwords and OTPs, Agnivarta AI uses a <strong>risk-based approach</strong>. It intelligently detects suspicious activities such as account takeover attempts, new device logins, fake identities, abnormal user behavior, insider threats, and unauthorized access attempts.
+        </p>
+        <p>
+          When a high-risk event is detected, the platform automatically triggers additional verification, generates security alerts, and can <strong>block suspicious sessions before damage occurs</strong>. Security teams can monitor active users, risk scores, threat alerts, device trust levels, login activities, and blocked sessions through a single centralized interface.
+        </p>
+      </div>
+
+      <!-- Platform Components -->
+      <div class="desc-section-title">Platform Components</div>
+      <div class="desc-components" style="margin-bottom:32px">
+        <div class="desc-component-row">
+          <span class="desc-component-num">01</span>
+          <div>
+            <div class="desc-component-name">Secure Banking Portal</div>
+            <div class="desc-component-desc">A full-featured digital banking interface where users can view balances, perform transactions, and manage their account — fully monitored by the AI engine.</div>
+          </div>
+        </div>
+        <div class="desc-component-row">
+          <span class="desc-component-num">02</span>
+          <div>
+            <div class="desc-component-name">AI-Powered Monitoring Engine</div>
+            <div class="desc-component-desc">The core intelligence layer that scores every session, classifies users as Trusted, Suspicious, or Dangerous, and fires autonomous responses when thresholds are breached.</div>
+          </div>
+        </div>
+        <div class="desc-component-row">
+          <span class="desc-component-num">03</span>
+          <div>
+            <div class="desc-component-name">Device Trust Analyzer</div>
+            <div class="desc-component-desc">Browser fingerprinting, IP geolocation tracking, and device consistency checks to verify each access attempt comes from a known, trusted endpoint.</div>
+          </div>
+        </div>
+        <div class="desc-component-row">
+          <span class="desc-component-num">04</span>
+          <div>
+            <div class="desc-component-name">Behavioral Analytics System</div>
+            <div class="desc-component-desc">Profiles user behavior over time — login hours, transaction patterns, navigation flows — and flags deviations that may indicate compromise or fraud.</div>
+          </div>
+        </div>
+        <div class="desc-component-row">
+          <span class="desc-component-num">05</span>
+          <div>
+            <div class="desc-component-name">Centralized Security Dashboard</div>
+            <div class="desc-component-desc">A real-time Security Operations Center (SOC) interface giving security teams full visibility into threats, sessions, blocked entities, traffic patterns, and audit findings.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Features -->
+      <div class="desc-section-title">Key Features</div>
+      <div class="desc-features-grid">
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Real-Time Threat Detection</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Identity Trust Verification</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Device Trust Analysis</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Behavioral Analytics</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">AI Risk Scoring Engine</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Suspicious Login Detection</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Session Monitoring &amp; Tracking</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Insider Threat Detection</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Security Alert Management</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Adaptive Verification System</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">AI Security Audit Assistant</div></div>
+        <div class="desc-feature-item"><div class="desc-feature-dot"></div><div class="desc-feature-text">Automated Threat Response</div></div>
+      </div>
+
+      <!-- Threats Addressed -->
+      <div class="desc-section-title">Threats Addressed</div>
+      <div class="desc-goals-grid">
+        <div class="desc-goal-card">
+          <div class="desc-goal-label">ATO</div>
+          <div class="desc-goal-text"><strong>Account Takeover.</strong> Detects credential stuffing, brute force, and session hijacking attempts before the attacker gains access.</div>
+        </div>
+        <div class="desc-goal-card">
+          <div class="desc-goal-label">KYC Fraud</div>
+          <div class="desc-goal-text"><strong>Synthetic Identity Fraud.</strong> Identifies fake accounts created with disposable emails, bot patterns, and synthetic identity signals at signup.</div>
+        </div>
+        <div class="desc-goal-card">
+          <div class="desc-goal-label">Insider Threat</div>
+          <div class="desc-goal-text"><strong>Privileged Misuse.</strong> Flags unusual access times, bulk data access, and behavior that deviates from an authenticated user's established profile.</div>
+        </div>
+        <div class="desc-goal-card">
+          <div class="desc-goal-label">Access Misuse</div>
+          <div class="desc-goal-text"><strong>Suspicious Account Recovery.</strong> Intercepts recovery flows that exhibit anomalous patterns — new device, new IP, rapid sequence of steps.</div>
+        </div>
+      </div>
+
+      <!-- CTA strip -->
+      <div style="background:var(--primary-light);border-radius:var(--radius);padding:28px 32px;border:1px solid rgba(0,115,230,.15);margin-bottom:8px">
+        <div style="font-size:.82rem;font-weight:700;color:var(--primary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Explore the Platform</div>
+        <div style="font-size:.88rem;color:var(--gray-600);margin-bottom:20px;line-height:1.6">Log in to the demo banking portal, trigger attack simulations, or open the Security Operations Center to see Agnivarta AI in action.</div>
+        <div class="desc-bottom-nav">
+          <button class="btn btn-primary" onclick="showPage('login')">Sign In to NovaBank</button>
+          <button class="btn btn-outline" onclick="showPage('security-dashboard')">Security Dashboard</button>
+          <button class="btn btn-outline" onclick="showPage('landing')">Back to Home</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="landing-footer">Agnivarta AI &copy; 2024 &mdash; Intelligent Fire Network &mdash; NovaBank Security Platform &mdash; Prototype Build v1.0</footer>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     LOGIN PAGE
+════════════════════════════════════════════════════════════════════ -->
+<div id="page-login" class="page">
+  <div class="auth-page">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div style="width:52px;height:52px;background:var(--primary);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;margin:0 auto 12px">N</div>
+        <div class="logo-big">NovaBank</div>
+        <div class="logo-sub">Secured by Agnivarta AI</div>
+      </div>
+      <h2 class="auth-title">Welcome back</h2>
+      <p class="auth-desc">Sign in to your secure banking account</p>
+      <div id="login-error" class="error-msg"></div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input id="login-email" class="form-input" type="email" placeholder="you@novabank.com" value="arjun@novabank.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="login-password" class="form-input" type="password" placeholder="Enter password" value="user1pass" />
+      </div>
+      <div style="text-align:right;margin-bottom:16px"><a href="#" style="font-size:.78rem;color:var(--primary)">Forgot password?</a></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;font-size:.88rem" onclick="doLogin()">Sign In Securely</button>
+      <div class="auth-divider"><hr/><span>Demo Accounts</span><hr/></div>
+      <div style="background:var(--gray-50);border-radius:8px;padding:12px;font-size:.72rem;color:var(--gray-600);line-height:1.9">
+        <strong>Regular User:</strong> arjun@novabank.com / user1pass<br/>
+        <strong>Risky User:</strong> vikram@novabank.com / user5pass<br/>
+        <strong>Admin:</strong> admin@novabank.com / adminpass
+      </div>
+      <div class="auth-link">No account? <a onclick="showPage('signup')">Open free account</a> &nbsp;|&nbsp; <a onclick="showPage('landing')">Back to home</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SIGNUP PAGE
+════════════════════════════════════════════════════════════════════ -->
+<div id="page-signup" class="page">
+  <div class="auth-page">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div style="width:52px;height:52px;background:var(--primary);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;margin:0 auto 12px">N</div>
+        <div class="logo-big">NovaBank</div>
+        <div class="logo-sub">AI-powered identity verification at signup</div>
+      </div>
+      <h2 class="auth-title">Create Account</h2>
+      <p class="auth-desc">Your identity will be verified by Agnivarta AI</p>
+      <div id="signup-error" class="error-msg"></div>
+      <div id="signup-success" style="display:none;background:var(--green-light);color:var(--green);border-radius:8px;padding:12px;font-size:.78rem;margin-bottom:14px"></div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input id="signup-name" class="form-input" type="text" placeholder="Your full name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input id="signup-email" class="form-input" type="email" placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="signup-password" class="form-input" type="password" placeholder="Choose a strong password" />
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;font-size:.88rem" onclick="doSignup()">Create Account</button>
+      <div class="auth-link">Already have an account? <a onclick="showPage('login')">Sign in</a> &nbsp;|&nbsp; <a onclick="showPage('landing')">Back to home</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     BANKING APP SHELL
+════════════════════════════════════════════════════════════════════ -->
+<div id="page-bank" class="page">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">N</div>
+        NovaBank
+      </div>
+      <div style="padding:12px">
+        <div class="sidebar-section">Banking</div>
+        <div class="nav-item active" onclick="switchBankTab('dashboard')"><span class="icon">&#8962;</span> Dashboard</div>
+        <div class="nav-item" onclick="switchBankTab('transactions')"><span class="icon">&#8646;</span> Transactions</div>
+        <div class="nav-item" onclick="switchBankTab('profile')"><span class="icon">&#128100;</span> My Profile</div>
+        <div class="nav-item" onclick="switchBankTab('security-center')"><span class="icon">&#128274;</span> Security Center</div>
+        <div class="sidebar-section">Activity</div>
+        <div class="nav-item" onclick="switchBankTab('session-activity')"><span class="icon">&#128203;</span> Session Activity</div>
+        <div class="sidebar-section">Admin</div>
+        <div class="nav-item" onclick="showPage('security-dashboard')"><span class="icon">&#9889;</span> Agnivarta AI <span style="font-size:.6rem;background:var(--primary);color:#fff;padding:1px 6px;border-radius:8px;margin-left:4px">AI</span></div>
+      </div>
+      <div style="margin-top:auto;padding:16px;">
+        <div style="background:var(--primary-light);border-radius:10px;padding:14px;">
+          <div style="font-size:.72rem;font-weight:700;color:var(--primary);margin-bottom:4px">Security Status</div>
+          <div id="bank-security-status" style="font-size:.72rem;color:var(--gray-600)">Scanning...</div>
+          <div id="bank-risk-indicator" class="badge badge-green" style="margin-top:6px">Trusted Session</div>
+        </div>
+        <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="doLogout()">Sign Out</button>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <span class="topbar-title" id="bank-page-title">Account Overview</span>
+      <div class="topbar-status"><div class="pulse"></div> Live AI Protection</div>
+      <div class="alert-bell" onclick="showPage('security-dashboard')">
+        &#128276;<span class="badge" id="bell-count">3</span>
+      </div>
+      <div class="topbar-user">
+        <div class="avatar" id="user-avatar">A</div>
+        <span id="user-name-top">Arjun Mehta</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Dashboard Tab -->
+      <div id="bank-tab-dashboard">
+        <div class="section-header">
+          <div>
+            <div class="section-title" id="greeting-text">Good morning, Arjun</div>
+            <div class="section-sub">Here is your account overview for today</div>
+          </div>
+          <div id="user-risk-display"></div>
+        </div>
+
+        <div style="background:linear-gradient(135deg,var(--primary) 0%,#005bb5 100%);border-radius:16px;padding:28px;color:#fff;margin-bottom:24px;display:flex;align-items:center;gap:24px">
+          <div style="flex:1">
+            <div style="font-size:.78rem;opacity:.75;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Total Balance</div>
+            <div style="font-size:2.2rem;font-weight:800;letter-spacing:-.5px" id="account-balance">INR 1,25,000.00</div>
+            <div style="font-size:.78rem;opacity:.7;margin-top:6px" id="account-number">A/C: NB-2024-001</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.72rem;opacity:.7;margin-bottom:8px">Quick Actions</div>
+            <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;margin-bottom:6px;width:130px" onclick="openTransferModal()">Send Money</button><br/>
+            <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;width:130px" onclick="switchBankTab('transactions')">View History</button>
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-bottom:24px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Recent Transactions</span><button class="btn btn-sm btn-outline" onclick="switchBankTab('transactions')">View all</button></div>
+            <div id="recent-txns-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">AI Security Summary</span></div>
+            <div id="security-summary"></div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--primary-light);color:var(--primary)">&#8646;</div>
+            <div class="metric-label">This Month</div>
+            <div class="metric-value" id="month-txns">0</div>
+            <div class="metric-trend">Transactions</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--green-light);color:var(--green)">&#8593;</div>
+            <div class="metric-label">Total Credits</div>
+            <div class="metric-value" id="total-credits">0</div>
+            <div class="metric-trend">This month</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--red-light);color:var(--red)">&#8595;</div>
+            <div class="metric-label">Total Debits</div>
+            <div class="metric-value" id="total-debits">0</div>
+            <div class="metric-trend">This month</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background:var(--yellow-light);color:var(--yellow)">&#128274;</div>
+            <div class="metric-label">Risk Score</div>
+            <div class="metric-value" id="user-risk-score">12</div>
+            <div class="metric-trend">AI assessment</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions Tab -->
+      <div id="bank-tab-transactions" style="display:none">
+        <div class="section-header">
+          <div><div class="section-title">Transaction History</div><div class="section-sub">All your account activity</div></div>
+          <button class="btn btn-primary" onclick="openTransferModal()">New Transaction</button>
+        </div>
+        <div class="table-card">
+          <div class="table-card-header"><span class="table-card-title">All Transactions</span></div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody id="all-txns-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Tab -->
+      <div id="bank-tab-profile" style="display:none">
+        <div class="section-header"><div class="section-title">My Profile</div></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Personal Information</span></div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="font-size:.78rem;color:var(--gray-400)">Full Name</span>
+                <span style="font-size:.82rem;font-weight:600" id="profile-name">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="font-size:.78rem;color:var(--gray-400)">Email</span>
+                <span style="font-size:.82rem;font-weight:600" id="profile-email">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="font-size:.78rem;color:var(--gray-400)">Account Number</span>
+                <span style="font-size:.82rem;font-weight:600" id="profile-acc">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0">
+                <span style="font-size:.78rem;color:var(--gray-400)">Account Status</span>
+                <span class="badge badge-green">Active</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">AI Trust Assessment</span></div>
+            <div id="profile-trust-display" style="display:flex;flex-direction:column;gap:12px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Center Tab -->
+      <div id="bank-tab-security-center" style="display:none">
+        <div class="section-header"><div class="section-title">Security Center</div><div class="section-sub">Your account security settings and AI analysis</div></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Security Checklist</span></div>
+            <div>
+              <div class="score-bar"><span class="score-bar-label">Password Strength</span><div class="score-bar-track"><div class="progress"><div class="progress-fill green" style="width:80%"></div></div></div><span class="score-bar-val" style="color:var(--green)">80%</span></div>
+              <div class="score-bar"><span class="score-bar-label">Device Trust</span><div class="score-bar-track"><div class="progress"><div class="progress-fill green" style="width:90%"></div></div></div><span class="score-bar-val" style="color:var(--green)">90%</span></div>
+              <div class="score-bar"><span class="score-bar-label">Session Security</span><div class="score-bar-track"><div class="progress"><div class="progress-fill yellow" style="width:65%"></div></div></div><span class="score-bar-val" style="color:var(--yellow)">65%</span></div>
+              <div class="score-bar"><span class="score-bar-label">Login Consistency</span><div class="score-bar-track"><div class="progress"><div class="progress-fill green" style="width:95%"></div></div></div><span class="score-bar-val" style="color:var(--green)">95%</span></div>
+              <div class="score-bar"><span class="score-bar-label">MFA Status</span><div class="score-bar-track"><div class="progress"><div class="progress-fill red" style="width:0%"></div></div></div><span class="score-bar-val" style="color:var(--red)">Off</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Recommendations</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--yellow-light);border-radius:8px;padding:12px;font-size:.78rem;color:var(--yellow)"><strong>Enable MFA:</strong> Two-factor authentication is not active. Enable it to improve security by 40%.</div>
+              <div style="background:var(--primary-light);border-radius:8px;padding:12px;font-size:.78rem;color:var(--primary)"><strong>Session Review:</strong> Review active sessions regularly to detect unauthorized access.</div>
+              <div style="background:var(--green-light);border-radius:8px;padding:12px;font-size:.78rem;color:var(--green)"><strong>Password:</strong> Your password meets security requirements. Consider rotating every 90 days.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session Activity Tab -->
+      <div id="bank-tab-session-activity" style="display:none">
+        <div class="section-header"><div class="section-title">Session Activity</div><div class="section-sub">All login and session events for your account</div></div>
+        <div class="card">
+          <div id="session-activity-list" style="max-height:500px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     AGNIVARTA AI SECURITY DASHBOARD
+════════════════════════════════════════════════════════════════════ -->
+<div id="page-security-dashboard" class="page">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon" style="background:var(--red)">AI</div>
+        Agnivarta AI
+      </div>
+      <div style="padding:12px">
+        <div class="sidebar-section">Monitoring</div>
+        <div class="nav-item active" onclick="switchSecTab('overview')" id="sec-nav-overview"><span class="icon">&#128202;</span> Overview</div>
+        <div class="nav-item" onclick="switchSecTab('live-threats')" id="sec-nav-live-threats"><span class="icon">&#128683;</span> Live Threats <span class="nav-badge" id="threat-nav-badge">5</span></div>
+        <div class="nav-item" onclick="switchSecTab('sessions')" id="sec-nav-sessions"><span class="icon">&#128100;</span> Active Sessions</div>
+        <div class="nav-item" onclick="switchSecTab('blocked')" id="sec-nav-blocked"><span class="icon">&#128562;</span> Blocked Entities</div>
+        <div class="sidebar-section">Intelligence</div>
+        <div class="nav-item" onclick="switchSecTab('behavioral')" id="sec-nav-behavioral"><span class="icon">&#129504;</span> Behavioral Analytics</div>
+        <div class="nav-item" onclick="switchSecTab('device-trust')" id="sec-nav-device-trust"><span class="icon">&#128241;</span> Device Trust</div>
+        <div class="nav-item" onclick="switchSecTab('traffic')" id="sec-nav-traffic"><span class="icon">&#128200;</span> Traffic Analysis</div>
+        <div class="sidebar-section">Operations</div>
+        <div class="nav-item" onclick="switchSecTab('users')" id="sec-nav-users"><span class="icon">&#128101;</span> All Users</div>
+        <div class="nav-item" onclick="switchSecTab('activity-logs')" id="sec-nav-activity-logs"><span class="icon">&#128203;</span> Activity Logs</div>
+        <div class="nav-item" onclick="switchSecTab('simulation')" id="sec-nav-simulation"><span class="icon">&#128170;</span> Attack Simulation</div>
+        <div class="nav-item" onclick="switchSecTab('audit')" id="sec-nav-audit"><span class="icon">&#128196;</span> AI Audit Report</div>
+        <div class="sidebar-section">Navigation</div>
+        <div class="nav-item" onclick="showPage('landing')"><span class="icon">&#127968;</span> Back to NovaBank</div>
+      </div>
+      <div style="margin-top:auto;padding:16px">
+        <div style="background:var(--gray-50);border-radius:10px;padding:12px;font-size:.72rem">
+          <div style="font-weight:700;color:var(--gray-800);margin-bottom:4px">WebSocket</div>
+          <div id="ws-status">Connecting...</div>
+        </div>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <span class="topbar-title" id="sec-page-title">Security Operations Center</span>
+      <div class="topbar-status" id="sec-threat-level"><div class="pulse" style="background:var(--red)"></div> <span id="threat-level-text">THREAT LEVEL: MEDIUM</span></div>
+      <div style="font-size:.75rem;color:var(--gray-600)">Last scan: <span id="last-scan-time">just now</span></div>
+      <div class="topbar-user">
+        <div class="avatar" style="background:var(--red)">AI</div>
+        <span>Agnivarta Engine</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Overview Tab -->
+      <div id="sec-tab-overview">
+        <div class="section-header">
+          <div><div class="section-title">Security Operations Center</div><div class="section-sub">Real-time intelligence — AI-powered threat monitoring</div></div>
+          <button class="btn btn-danger" onclick="refreshSecDashboard()">Refresh Data</button>
+        </div>
+        <div class="metric-grid" id="sec-metrics-grid"></div>
+        <div class="two-col" style="margin-bottom:24px">
+          <div class="table-card">
+            <div class="table-card-header"><span class="table-card-title">Live Alert Feed</span><span id="ws-status-badge" class="badge badge-green">Connected</span></div>
+            <div id="alert-feed" style="max-height:360px;overflow-y:auto"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Traffic Overview (24h)</span></div>
+            <div id="traffic-chart" style="padding:8px 0"></div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Trust Distribution</span></div>
+            <div id="trust-chart" style="padding:8px 0"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Alert Categories</span></div>
+            <div id="alert-type-chart" style="padding:8px 0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Threats Tab -->
+      <div id="sec-tab-live-threats" style="display:none">
+        <div class="section-header">
+          <div><div class="section-title">Live Threat Monitoring</div><div class="section-sub">Unresolved security alerts requiring action</div></div>
+          <button class="btn btn-outline" onclick="loadAlerts()">Refresh</button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Severity</th><th>Type</th><th>Description</th><th>User</th><th>Time</th><th>Action</th></tr></thead>
+            <tbody id="threats-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sessions Tab -->
+      <div id="sec-tab-sessions" style="display:none">
+        <div class="section-header">
+          <div><div class="section-title">Active User Sessions</div><div class="section-sub">All active and recent sessions with risk profiles</div></div>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>IP Address</th><th>Device</th><th>Login Time</th><th>Risk Score</th><th>Trust Level</th><th>Status</th></tr></thead>
+            <tbody id="sessions-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Blocked Entities Tab -->
+      <div id="sec-tab-blocked" style="display:none">
+        <div class="section-header">
+          <div><div class="section-title">Blocked Entities</div><div class="section-sub">IPs, users, sessions, and emails blocked by AI or admin</div></div>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Type</th><th>Entity</th><th>Reason</th><th>Blocked At</th><th>Blocked By</th></tr></thead>
+            <tbody id="blocked-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Behavioral Analytics Tab -->
+      <div id="sec-tab-behavioral" style="display:none">
+        <div class="section-header"><div class="section-title">Behavioral Analytics</div><div class="section-sub">AI-driven user behavior profiling and anomaly detection</div></div>
+        <div class="metric-grid" style="margin-bottom:24px">
+          <div class="metric-card"><div class="metric-icon" style="background:var(--primary-light);color:var(--primary)">&#129504;</div><div class="metric-label">Anomalies Detected</div><div class="metric-value">14</div><div class="metric-trend">This session</div></div>
+          <div class="metric-card"><div class="metric-icon" style="background:var(--yellow-light);color:var(--yellow)">&#128270;</div><div class="metric-label">Patterns Analyzed</div><div class="metric-value">1,284</div><div class="metric-trend">All users</div></div>
+          <div class="metric-card"><div class="metric-icon" style="background:var(--red-light);color:var(--red)">&#9888;</div><div class="metric-label">Risky Behaviors</div><div class="metric-value">7</div><div class="metric-trend">Active flags</div></div>
+          <div class="metric-card"><div class="metric-icon" style="background:var(--green-light);color:var(--green)">&#10003;</div><div class="metric-label">Clean Sessions</div><div class="metric-value">89%</div><div class="metric-trend">Pass rate</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Risk Score Distribution</span></div>
+            <div id="risk-distribution-chart" style="padding:8px 0"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">User Risk Profiles</span></div>
+            <div id="user-risk-cards" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Device Trust Tab -->
+      <div id="sec-tab-device-trust" style="display:none">
+        <div class="section-header"><div class="section-title">Device Trust Engine</div><div class="section-sub">Browser fingerprinting, IP tracking, and device verification</div></div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>IP Address</th><th>Browser/Device</th><th>Fingerprint</th><th>Location</th><th>Trust Level</th><th>Last Seen</th></tr></thead>
+            <tbody id="device-trust-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Traffic Analysis Tab -->
+      <div id="sec-tab-traffic" style="display:none">
+        <div class="section-header"><div class="section-title">Traffic Analysis</div><div class="section-sub">Requests per minute, blocked traffic, and spike detection</div></div>
+        <div class="metric-grid" style="margin-bottom:24px">
+          <div class="metric-card"><div class="metric-icon" style="background:var(--primary-light);color:var(--primary)">&#8594;</div><div class="metric-label">Req/Min (live)</div><div class="metric-value" id="live-rpm">72</div></div>
+          <div class="metric-card"><div class="metric-icon" style="background:var(--red-light);color:var(--red)">&#128683;</div><div class="metric-label">Blocked Today</div><div class="metric-value" id="blocked-today">48</div></div>
+          <div class="metric-card"><div class="metric-icon" style="background:var(--yellow-light);color:var(--yellow)">&#128241;</div><div class="metric-label">Unique IPs</div><div class="metric-value" id="unique-ips">234</div></div>
+          <div class="metric-card"><div class="metric-icon" style="background:var(--green-light);color:var(--green)">&#9745;</div><div class="metric-label">Clean Traffic</div><div class="metric-value">78%</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">24-Hour Traffic History</span></div>
+          <div id="traffic-detail-chart" style="padding:8px 0"></div>
+        </div>
+      </div>
+
+      <!-- All Users Tab -->
+      <div id="sec-tab-users" style="display:none">
+        <div class="section-header"><div class="section-title">User Risk Intelligence</div><div class="section-sub">All users sorted by AI risk score</div></div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Email</th><th>Account</th><th>Balance</th><th>Risk Score</th><th>Trust Level</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="all-users-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Activity Logs Tab -->
+      <div id="sec-tab-activity-logs" style="display:none">
+        <div class="section-header"><div class="section-title">Activity Logs</div><div class="section-sub">Complete audit trail of all platform events</div></div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th><th>IP</th><th>Risk Flag</th></tr></thead>
+            <tbody id="activity-logs-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Attack Simulation Tab -->
+      <div id="sec-tab-simulation" style="display:none">
+        <div class="section-header"><div class="section-title">Attack Simulation Engine</div><div class="section-sub">Trigger simulated attacks to test AI defense responses in real time</div></div>
+        <div style="background:var(--yellow-light);border:1.5px solid var(--yellow);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:.78rem;color:var(--yellow)">
+          <strong>Demo Mode:</strong> All simulations are safe. No real data is harmed. AI engine will detect, alert, and auto-block as in production.
+        </div>
+        <div class="sim-grid" id="simulation-grid">
+          <div class="sim-btn" onclick="runSimulation('brute_force',this)">
+            <div class="sim-name">Brute Force Attack</div>
+            <div class="sim-desc">Simulate 8 rapid failed login attempts from a single IP</div>
+          </div>
+          <div class="sim-btn" onclick="runSimulation('suspicious_login',this)">
+            <div class="sim-name">Suspicious Login</div>
+            <div class="sim-desc">Login from Tor exit node with unknown device fingerprint</div>
+          </div>
+          <div class="sim-btn" onclick="runSimulation('fake_user',this)">
+            <div class="sim-name">Fake User Activity</div>
+            <div class="sim-desc">Create bot account with disposable email and numeric username</div>
+          </div>
+          <div class="sim-btn" onclick="runSimulation('traffic_spike',this)">
+            <div class="sim-name">Traffic Spike</div>
+            <div class="sim-desc">Simulate DDoS-like traffic surge 2400% above baseline</div>
+          </div>
+          <div class="sim-btn" onclick="runSimulation('insider_threat',this)">
+            <div class="sim-name">Insider Threat</div>
+            <div class="sim-desc">Simulate bulk data exfiltration at 2:34 AM by internal user</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:24px">
+          <div class="card-header"><span class="card-title">Simulation Results</span></div>
+          <div id="simulation-results" style="min-height:100px;font-size:.8rem;color:var(--gray-600)">
+            <div style="text-align:center;padding:30px;color:var(--gray-400)">Click a simulation button above to trigger an attack scenario.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Audit Report Tab -->
+      <div id="sec-tab-audit" style="display:none">
+        <div class="section-header">
+          <div><div class="section-title">AI Security Audit Report</div><div class="section-sub">Automated scan of NovaBank platform security posture</div></div>
+          <button class="btn btn-primary" onclick="loadAuditReport()">Run Audit</button>
+        </div>
+        <div id="audit-report-container">
+          <div style="text-align:center;padding:60px;color:var(--gray-400)">Click "Run Audit" to generate a fresh AI security assessment.</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div id="transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--white);border-radius:16px;padding:28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="font-size:1rem;font-weight:700;margin-bottom:20px;color:var(--gray-800)">New Transaction</div>
+    <div class="form-group">
+      <label class="form-label">Transaction Type</label>
+      <select id="tx-type" class="form-input">
+        <option value="debit">Debit (Pay/Withdraw)</option>
+        <option value="credit">Credit (Receive)</option>
+        <option value="transfer">Transfer (Send)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount (INR)</label>
+      <input id="tx-amount" class="form-input" type="number" placeholder="Enter amount" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input id="tx-desc" class="form-input" type="text" placeholder="Transaction description" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="submitTransaction()">Confirm</button>
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── State ─────────────────────────────────────────────────────────── */
+const API = 'http://localhost:8000';
+let currentUser = null;
+let ws = null;
+let wsRetry = 0;
+
+/* ── Page Router ────────────────────────────────────────────────────── */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + id);
+  if (el) el.classList.add('active');
+
+  if (id === 'security-dashboard') {
+    connectWS();
+    refreshSecDashboard();
+  }
+  if (id === 'bank' && currentUser) {
+    loadBankDashboard();
+  }
+}
+
+function switchBankTab(tab) {
+  ['dashboard','transactions','profile','security-center','session-activity'].forEach(t => {
+    const el = document.getElementById('bank-tab-' + t);
+    if (el) el.style.display = 'none';
+  });
+  const el = document.getElementById('bank-tab-' + tab);
+  if (el) el.style.display = 'block';
+  document.querySelectorAll('#page-bank .nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('#page-bank .nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(tab)) n.classList.add('active');
+  });
+  const titles = {dashboard:'Account Overview', transactions:'Transaction History', profile:'My Profile', 'security-center':'Security Center', 'session-activity':'Session Activity'};
+  document.getElementById('bank-page-title').textContent = titles[tab] || tab;
+
+  if (tab === 'transactions') loadAllTransactions();
+  if (tab === 'profile') loadProfile();
+  if (tab === 'session-activity') loadSessionActivity();
+}
+
+function switchSecTab(tab) {
+  document.querySelectorAll('[id^="sec-tab-"]').forEach(el => el.style.display = 'none');
+  const el = document.getElementById('sec-tab-' + tab);
+  if (el) el.style.display = 'block';
+  document.querySelectorAll('#page-security-dashboard .nav-item').forEach(n => n.classList.remove('active'));
+  const nav = document.getElementById('sec-nav-' + tab);
+  if (nav) nav.classList.add('active');
+
+  const titles = {
+    overview:'Security Operations Center', 'live-threats':'Live Threat Monitoring',
+    sessions:'Active Sessions', blocked:'Blocked Entities', behavioral:'Behavioral Analytics',
+    'device-trust':'Device Trust Engine', traffic:'Traffic Analysis',
+    users:'User Risk Intelligence', 'activity-logs':'Activity Logs',
+    simulation:'Attack Simulation Engine', audit:'AI Security Audit'
+  };
+  document.getElementById('sec-page-title').textContent = titles[tab] || 'Security Dashboard';
+
+  if (tab === 'live-threats') loadAlerts();
+  if (tab === 'sessions') loadSessions();
+  if (tab === 'blocked') loadBlocked();
+  if (tab === 'users') loadAllUsers();
+  if (tab === 'activity-logs') loadActivityLogs();
+  if (tab === 'device-trust') loadDeviceTrust();
+  if (tab === 'behavioral') loadBehavioral();
+  if (tab === 'traffic') loadTrafficDetail();
+}
+
+/* ── WebSocket ──────────────────────────────────────────────────────── */
+function connectWS() {
+  try {
+    ws = new WebSocket('ws://localhost:8000/ws/monitor');
+    ws.onopen = () => {
+      document.getElementById('ws-status').textContent = 'Live – receiving events';
+      document.getElementById('ws-status').className = '';
+      document.getElementById('ws-status-badge').className = 'badge badge-green';
+      document.getElementById('ws-status-badge').textContent = 'Connected';
+      wsRetry = 0;
+    };
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      handleWSMessage(msg);
+    };
+    ws.onclose = () => {
+      document.getElementById('ws-status').textContent = 'Reconnecting...';
+      document.getElementById('ws-status').className = 'disconnected';
+      if (wsRetry < 5) { wsRetry++; setTimeout(connectWS, 3000); }
+    };
+    ws.onerror = () => {};
+  } catch(e) {}
+}
+
+function handleWSMessage(msg) {
+  if (msg.type === 'live_metrics') updateLiveMetrics(msg.data);
+  if (msg.type === 'alert') {
+    showToast(msg.data.message, msg.data.severity || 'high');
+    appendAlertFeedItem({alert_type:'real_time', severity:msg.data.severity, description:msg.data.message, timestamp:new Date().toISOString()});
+  }
+  if (msg.type === 'simulation') {
+    showToast('Simulation: ' + msg.data.attack_type.replace('_',' ').toUpperCase() + ' detected', 'critical');
+  }
+  document.getElementById('last-scan-time').textContent = 'just now';
+}
+
+function updateLiveMetrics(data) {
+  try {
+    document.getElementById('live-rpm').textContent = data.requests_per_min;
+    document.getElementById('threat-level-text').textContent = 'THREAT LEVEL: ' + data.threat_level.toUpperCase();
+  } catch(e) {}
+}
+
+/* ── Toast ──────────────────────────────────────────────────────────── */
+function showToast(message, severity='medium') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + severity;
+  t.innerHTML = `<div><div class="toast-title">${capitalize(severity)} Alert</div><div>${message}</div></div>`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 5000);
+}
+
+/* ── Auth ───────────────────────────────────────────────────────────── */
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pwd   = document.getElementById('login-password').value;
+  const err   = document.getElementById('login-error');
+  err.style.display = 'none';
+
+  if (!email || !pwd) { err.textContent='Please fill all fields'; err.style.display='block'; return; }
+
+  try {
+    const res = await fetch(API + '/api/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password:pwd, device_info:navigator.userAgent, ip_address:'127.0.0.1'})
+    });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.detail || 'Login failed'; err.style.display='block'; return; }
+    currentUser = data.user;
+    currentUser.session_id = data.session_id;
+    loadBankDashboard();
+    showPage('bank');
+  } catch(e) {
+    err.textContent = 'Cannot connect to server. Make sure the backend is running on port 8000.';
+    err.style.display = 'block';
+  }
+}
+
+async function doSignup() {
+  const name = document.getElementById('signup-name').value;
+  const email = document.getElementById('signup-email').value;
+  const pwd   = document.getElementById('signup-password').value;
+  const err   = document.getElementById('signup-error');
+  const suc   = document.getElementById('signup-success');
+  err.style.display='none'; suc.style.display='none';
+
+  if (!name||!email||!pwd) { err.textContent='Please fill all fields'; err.style.display='block'; return; }
+
+  try {
+    const res = await fetch(API + '/api/auth/signup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, email, password:pwd})
+    });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.detail || 'Signup failed'; err.style.display='block'; return; }
+    suc.textContent = `Account created! Account No: ${data.account_number}. ${data.risk_flags.length > 0 ? 'Warning: ' + data.risk_flags[0] : 'Identity verified successfully.'}`;
+    suc.style.display='block';
+    setTimeout(() => showPage('login'), 2500);
+  } catch(e) {
+    err.textContent = 'Cannot connect to server. Make sure the backend is running.';
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  if (ws) ws.close();
+  showPage('landing');
+}
+
+/* ── Bank Dashboard ─────────────────────────────────────────────────── */
+async function loadBankDashboard() {
+  if (!currentUser) return;
+
+  document.getElementById('user-name-top').textContent = currentUser.name;
+  document.getElementById('user-avatar').textContent = currentUser.name[0];
+  const hr = new Date().getHours();
+  const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  document.getElementById('greeting-text').textContent = `${greet}, ${currentUser.name.split(' ')[0]}`;
+  document.getElementById('account-balance').textContent = 'INR ' + Number(currentUser.balance).toLocaleString('en-IN', {minimumFractionDigits:2});
+  document.getElementById('account-number').textContent = 'A/C: ' + currentUser.account_number;
+
+  const trust = currentUser.trust_level || 'trusted';
+  const riskMap = {trusted:'badge-green', suspicious:'badge-yellow', dangerous:'badge-red'};
+  document.getElementById('bank-risk-indicator').className = 'badge ' + (riskMap[trust]||'badge-green');
+  document.getElementById('bank-risk-indicator').textContent = capitalize(trust) + ' Account';
+  document.getElementById('bank-security-status').textContent = `Risk Score: ${currentUser.risk_score}`;
+  document.getElementById('user-risk-score').textContent = currentUser.risk_score;
+
+  const riskClass = trust==='trusted'?'trusted':trust==='suspicious'?'suspicious':'dangerous';
+  document.getElementById('user-risk-display').innerHTML = `
+    <div class="risk-gauge">
+      <div class="risk-circle ${riskClass}">
+        <div class="risk-num">${currentUser.risk_score}</div>
+        <div class="risk-lbl">/100</div>
+      </div>
+      <div style="font-size:.72rem;margin-top:6px;font-weight:600;color:var(--gray-600)">${capitalize(trust)}</div>
+    </div>`;
+
+  try {
+    const res = await fetch(`${API}/api/transactions/${currentUser.id}`);
+    const data = await res.json();
+    const txns = data.transactions || [];
+
+    let credits=0, debits=0;
+    txns.forEach(t => { if(t.type==='credit') credits+=t.amount; else debits+=t.amount; });
+    document.getElementById('month-txns').textContent = txns.length;
+    document.getElementById('total-credits').textContent = 'INR ' + Math.round(credits/1000) + 'K';
+    document.getElementById('total-debits').textContent = 'INR ' + Math.round(debits/1000) + 'K';
+
+    const list = document.getElementById('recent-txns-list');
+    list.innerHTML = txns.slice(0,5).map(t => `
+      <div class="activity-item">
+        <div class="activity-time">${formatTime(t.timestamp)}</div>
+        <div class="activity-body">
+          <div class="activity-title">${t.description}</div>
+          <div class="activity-desc">${capitalize(t.type)} &bull; ${t.id}</div>
+        </div>
+        <div style="font-size:.85rem;font-weight:700;color:${t.type==='credit'?'var(--green)':'var(--red)'}">
+          ${t.type==='credit'?'+':'-'}INR ${Number(t.amount).toLocaleString('en-IN')}
+        </div>
+      </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--gray-400)">No transactions yet</div>';
+
+    document.getElementById('security-summary').innerHTML = `
+      <div class="activity-item"><div class="activity-body"><div class="activity-title">AI Trust Assessment</div><div class="activity-desc">Continuous behavioral monitoring active</div></div><span class="badge badge-green">Active</span></div>
+      <div class="activity-item"><div class="activity-body"><div class="activity-title">Session Security</div><div class="activity-desc">Session ID: ${currentUser.session_id||'N/A'}</div></div><span class="badge badge-green">Secure</span></div>
+      <div class="activity-item"><div class="activity-body"><div class="activity-title">Device Fingerprint</div><div class="activity-desc">Browser verified and trusted</div></div><span class="badge badge-green">Verified</span></div>
+      <div class="activity-item"><div class="activity-body"><div class="activity-title">Login Location</div><div class="activity-desc">India – consistent with profile</div></div><span class="badge ${riskMap[trust]||'badge-green'}">${capitalize(trust)}</span></div>`;
+  } catch(e) {
+    document.getElementById('recent-txns-list').innerHTML = '<div style="padding:16px;font-size:.78rem;color:var(--gray-400)">Connect backend to load data</div>';
+  }
+}
+
+async function loadAllTransactions() {
+  if (!currentUser) return;
+  try {
+    const res = await fetch(`${API}/api/transactions/${currentUser.id}?limit=50`);
+    const data = await res.json();
+    document.getElementById('all-txns-body').innerHTML = (data.transactions||[]).map(t => `
+      <tr>
+        <td><code style="font-size:.72rem;background:var(--gray-50);padding:2px 6px;border-radius:4px">${t.id}</code></td>
+        <td>${badgeForType(t.type)}</td>
+        <td>${t.description}</td>
+        <td style="font-weight:700;color:${t.type==='credit'?'var(--green)':'var(--red)'}">
+          ${t.type==='credit'?'+':'-'}INR ${Number(t.amount).toLocaleString('en-IN')}
+        </td>
+        <td style="font-size:.75rem;color:var(--gray-400)">${formatDate(t.timestamp)}</td>
+        <td><span class="badge badge-green">${t.status}</span></td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+function loadProfile() {
+  if (!currentUser) return;
+  document.getElementById('profile-name').textContent = currentUser.name;
+  document.getElementById('profile-email').textContent = currentUser.email;
+  document.getElementById('profile-acc').textContent = currentUser.account_number;
+
+  const trust = currentUser.trust_level || 'trusted';
+  const riskClass = trust==='trusted'?'trusted':trust==='suspicious'?'suspicious':'dangerous';
+  document.getElementById('profile-trust-display').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+      <div class="risk-circle ${riskClass}" style="width:70px;height:70px">
+        <div class="risk-num" style="font-size:1.1rem">${currentUser.risk_score}</div>
+        <div class="risk-lbl">/100</div>
+      </div>
+      <div>
+        <div style="font-size:1rem;font-weight:700">${capitalize(trust)}</div>
+        <div style="font-size:.75rem;color:var(--gray-400)">AI Trust Classification</div>
+      </div>
+    </div>
+    <div class="score-bar"><span class="score-bar-label">Identity Verified</span><div class="score-bar-track"><div class="progress"><div class="progress-fill green" style="width:100%"></div></div></div><span class="score-bar-val" style="color:var(--green)">Yes</span></div>
+    <div class="score-bar"><span class="score-bar-label">Email Reputation</span><div class="score-bar-track"><div class="progress"><div class="progress-fill ${trust==='trusted'?'green':'yellow'}" style="width:${trust==='trusted'?90:50}%"></div></div></div><span class="score-bar-val">${trust==='trusted'?90:50}%</span></div>
+    <div class="score-bar"><span class="score-bar-label">Behavioral Score</span><div class="score-bar-track"><div class="progress"><div class="progress-fill ${trust==='trusted'?'green':trust==='suspicious'?'yellow':'red'}" style="width:${100-currentUser.risk_score}%"></div></div></div><span class="score-bar-val">${100-currentUser.risk_score}%</span></div>`;
+}
+
+function loadSessionActivity() {
+  const items = [
+    {action:'Login', time: new Date().toISOString(), ip:'127.0.0.1', detail:'Successful login from Chrome/Windows'},
+    {action:'Dashboard View', time: new Date(Date.now()-1000*60*2).toISOString(), ip:'127.0.0.1', detail:'Account overview accessed'},
+    {action:'Transaction History', time: new Date(Date.now()-1000*60*5).toISOString(), ip:'127.0.0.1', detail:'Viewed last 10 transactions'},
+  ];
+  document.getElementById('session-activity-list').innerHTML = items.map(i=>`
+    <div class="activity-item">
+      <div class="activity-time">${formatTime(i.time)}</div>
+      <div class="activity-body">
+        <div class="activity-title">${i.action}</div>
+        <div class="activity-desc">${i.detail} &bull; IP: ${i.ip}</div>
+      </div>
+      <span class="badge badge-green">Safe</span>
+    </div>`).join('');
+}
+
+/* ── Transfer Modal ─────────────────────────────────────────────────── */
+function openTransferModal() {
+  document.getElementById('transfer-modal').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('transfer-modal').style.display = 'none';
+}
+
+async function submitTransaction() {
+  if (!currentUser) return;
+  const type = document.getElementById('tx-type').value;
+  const amount = parseFloat(document.getElementById('tx-amount').value);
+  const desc = document.getElementById('tx-desc').value;
+  if (!amount || amount <= 0) { showToast('Please enter a valid amount','medium'); return; }
+  try {
+    const res = await fetch(API+'/api/transactions/create', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id:currentUser.id, type, amount, description:desc||'Transaction'})
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal();
+      showToast('Transaction completed: INR '+amount.toLocaleString('en-IN'),'low');
+      if (type!=='credit') currentUser.balance -= amount;
+      else currentUser.balance += amount;
+      loadBankDashboard();
+    }
+  } catch(e) { showToast('Transaction failed - check server connection','high'); }
+}
+
+/* ── Security Dashboard Loaders ─────────────────────────────────────── */
+async function refreshSecDashboard() {
+  try {
+    const res = await fetch(API+'/api/security/dashboard');
+    const data = await res.json();
+    const m = data.metrics;
+
+    document.getElementById('sec-metrics-grid').innerHTML = [
+      {icon:'&#128100;', label:'Active Sessions',  val:m.active_sessions,  color:'primary', bg:'primary-light'},
+      {icon:'&#128683;', label:'Open Alerts',       val:m.open_alerts,      color:'red',     bg:'red-light'},
+      {icon:'&#128562;', label:'Blocked Entities',  val:m.blocked_entities, color:'yellow',  bg:'yellow-light'},
+      {icon:'&#9888;',   label:'Dangerous Users',   val:m.dangerous_users,  color:'red',     bg:'red-light'},
+      {icon:'&#128274;', label:'Suspicious Users',  val:m.suspicious_users, color:'yellow',  bg:'yellow-light'},
+      {icon:'&#10003;',  label:'Trusted Users',     val:m.trusted_users,    color:'green',   bg:'green-light'},
+      {icon:'&#10006;',  label:'Failed Logins',     val:m.failed_logins,    color:'red',     bg:'red-light'},
+      {icon:'&#128202;', label:'Total Users',        val:m.total_users,      color:'primary', bg:'primary-light'},
+    ].map(c=>`
+      <div class="metric-card">
+        <div class="metric-icon" style="background:var(--${c.bg});color:var(--${c.color})">${c.icon}</div>
+        <div class="metric-label">${c.label}</div>
+        <div class="metric-value">${c.val}</div>
+      </div>`).join('');
+
+    const feed = document.getElementById('alert-feed');
+    feed.innerHTML = (data.recent_alerts||[]).map(a => alertFeedItem(a)).join('') ||
+      '<div style="padding:20px;text-align:center;color:var(--gray-400)">No active alerts</div>';
+
+    const traffic = (data.traffic_data||[]).slice(-12).reverse();
+    document.getElementById('traffic-chart').innerHTML = traffic.map(t=>`
+      <div class="chart-bar-row">
+        <span class="chart-bar-label">${formatTime(t.timestamp)}</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min((t.requests_per_min/200)*100,100)}%;background:var(--primary)"></div></div>
+        <span class="chart-bar-val">${t.requests_per_min}</span>
+      </div>`).join('');
+
+    document.getElementById('trust-chart').innerHTML = [
+      {label:'Trusted', val:m.trusted_users, color:'green', pct: m.total_users?Math.round(m.trusted_users/m.total_users*100):0},
+      {label:'Suspicious', val:m.suspicious_users, color:'yellow', pct:m.total_users?Math.round(m.suspicious_users/m.total_users*100):0},
+      {label:'Dangerous', val:m.dangerous_users, color:'red', pct:m.total_users?Math.round(m.dangerous_users/m.total_users*100):0},
+    ].map(item=>`
+      <div class="chart-bar-row">
+        <span class="chart-bar-label">${item.label}</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${item.pct}%;background:var(--${item.color})"></div></div>
+        <span class="chart-bar-val">${item.val}</span>
+      </div>`).join('');
+
+    const alertCounts = {};
+    (data.recent_alerts||[]).forEach(a => { alertCounts[a.alert_type] = (alertCounts[a.alert_type]||0)+1; });
+    const maxCount = Math.max(...Object.values(alertCounts),1);
+    document.getElementById('alert-type-chart').innerHTML = Object.entries(alertCounts).map(([k,v])=>`
+      <div class="chart-bar-row">
+        <span class="chart-bar-label">${k.replace(/_/g,' ')}</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${(v/maxCount)*100}%;background:var(--red)"></div></div>
+        <span class="chart-bar-val">${v}</span>
+      </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--gray-400)">No alert data</div>';
+
+    document.getElementById('threat-nav-badge').textContent = m.open_alerts;
+    document.getElementById('bell-count').textContent = m.open_alerts;
+
+  } catch(e) {
+    document.getElementById('sec-metrics-grid').innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--gray-400)">Start the backend server: <code>python backend/main.py</code></div>';
+  }
+}
+
+async function loadAlerts() {
+  try {
+    const res = await fetch(API+'/api/security/alerts');
+    const data = await res.json();
+    document.getElementById('threats-table-body').innerHTML = (data.alerts||[]).map(a=>`
+      <tr>
+        <td>${severityBadge(a.severity)}</td>
+        <td><code style="font-size:.72rem">${a.alert_type}</code></td>
+        <td style="max-width:280px;font-size:.78rem">${a.description}</td>
+        <td style="font-size:.75rem">${a.user_id||'system'}</td>
+        <td style="font-size:.72rem;color:var(--gray-400)">${formatDate(a.timestamp)}</td>
+        <td><button class="btn btn-sm btn-success" onclick="resolveAlert('${a.id}')">Resolve</button></td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function resolveAlert(id) {
+  try {
+    await fetch(API+'/api/security/resolve-alert/'+id, {method:'POST'});
+    showToast('Alert resolved','low');
+    loadAlerts();
+  } catch(e) {}
+}
+
+async function loadSessions() {
+  try {
+    const res = await fetch(API+'/api/security/sessions');
+    const data = await res.json();
+    document.getElementById('sessions-table-body').innerHTML = (data.sessions||[]).map(s=>`
+      <tr>
+        <td><div style="font-weight:600;font-size:.8rem">${s.name||'Unknown'}</div><div style="font-size:.68rem;color:var(--gray-400)">${s.email||''}</div></td>
+        <td><code style="font-size:.72rem">${s.ip_address}</code></td>
+        <td style="font-size:.75rem;max-width:120px">${s.device_info||'Unknown'}</td>
+        <td style="font-size:.72rem;color:var(--gray-400)">${formatDate(s.login_time)}</td>
+        <td><div style="font-weight:700;font-size:.9rem;color:${riskColor(s.risk_score)}">${s.risk_score}</div></td>
+        <td>${trustBadge(s.trust_level||'trusted')}</td>
+        <td>${statusBadge(s.status)}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function loadBlocked() {
+  try {
+    const res = await fetch(API+'/api/security/blocked');
+    const data = await res.json();
+    document.getElementById('blocked-table-body').innerHTML = (data.blocked||[]).map(b=>`
+      <tr>
+        <td><span class="badge badge-red">${b.entity_type}</span></td>
+        <td><code style="font-size:.72rem;word-break:break-all">${b.entity_value}</code></td>
+        <td style="font-size:.78rem;max-width:240px">${b.reason}</td>
+        <td style="font-size:.72rem;color:var(--gray-400)">${formatDate(b.blocked_at)}</td>
+        <td style="font-size:.75rem">${b.blocked_by||'AI Engine'}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function loadAllUsers() {
+  try {
+    const res = await fetch(API+'/api/security/users');
+    const data = await res.json();
+    document.getElementById('all-users-body').innerHTML = (data.users||[]).map(u=>`
+      <tr>
+        <td><div style="font-weight:600">${u.name}</div></td>
+        <td style="font-size:.78rem">${u.email}</td>
+        <td><code style="font-size:.72rem">${u.account_number||'-'}</code></td>
+        <td style="font-weight:600">INR ${Number(u.balance||0).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+        <td><div style="font-weight:700;color:${riskColor(u.risk_score)}">${u.risk_score}</div></td>
+        <td>${trustBadge(u.trust_level)}</td>
+        <td>${statusBadge(u.status)}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="blockUser('${u.id}')">Block</button></td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function blockUser(id) {
+  try {
+    await fetch(API+'/api/security/block-user/'+id, {method:'POST'});
+    showToast('User blocked','high');
+    loadAllUsers();
+  } catch(e) {}
+}
+
+async function loadActivityLogs() {
+  try {
+    const res = await fetch(API+'/api/security/activity-logs');
+    const data = await res.json();
+    document.getElementById('activity-logs-body').innerHTML = (data.logs||[]).map(l=>`
+      <tr style="${l.risk_flag?'background:var(--red-light)':''}">
+        <td style="font-size:.72rem;color:var(--gray-400)">${formatDate(l.timestamp)}</td>
+        <td style="font-size:.78rem">${l.name||l.user_id||'Unknown'}</td>
+        <td><code style="font-size:.72rem">${l.action}</code></td>
+        <td style="font-size:.75rem;max-width:260px">${l.details||'-'}</td>
+        <td><code style="font-size:.72rem">${l.ip_address||'N/A'}</code></td>
+        <td>${l.risk_flag ? '<span class="badge badge-red">Flagged</span>' : '<span class="badge badge-green">Clean</span>'}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+function loadDeviceTrust() {
+  fetch(API+'/api/security/sessions').then(r=>r.json()).then(data=>{
+    document.getElementById('device-trust-body').innerHTML = (data.sessions||[]).map(s=>`
+      <tr>
+        <td><div style="font-weight:600;font-size:.8rem">${s.name||'Unknown'}</div></td>
+        <td><code style="font-size:.72rem">${s.ip_address}</code></td>
+        <td style="font-size:.75rem">${s.browser||s.device_info||'Unknown'}</td>
+        <td><code style="font-size:.68rem">${(s.fingerprint||'N/A').substring(0,12)}...</code></td>
+        <td style="font-size:.75rem">${s.location||'India'}</td>
+        <td>${trustBadge(s.trust_level||'trusted')}</td>
+        <td style="font-size:.72rem;color:var(--gray-400)">${formatDate(s.last_active||s.login_time)}</td>
+      </tr>`).join('');
+  }).catch(()=>{});
+}
+
+async function loadBehavioral() {
+  try {
+    const res = await fetch(API+'/api/security/users');
+    const data = await res.json();
+    const users = data.users || [];
+
+    const ranges = [{label:'0-25 (Trusted)',from:0,to:25,color:'green'},{label:'26-60 (Suspicious)',from:26,to:60,color:'yellow'},{label:'61-100 (Dangerous)',from:61,to:100,color:'red'}];
+    const totals = ranges.map(r=>({...r, count:users.filter(u=>u.risk_score>=r.from&&u.risk_score<=r.to).length}));
+    const maxC = Math.max(...totals.map(t=>t.count),1);
+    document.getElementById('risk-distribution-chart').innerHTML = totals.map(t=>`
+      <div class="chart-bar-row" style="margin-bottom:12px">
+        <span class="chart-bar-label" style="width:140px">${t.label}</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${(t.count/maxC)*100}%;background:var(--${t.color})"></div></div>
+        <span class="chart-bar-val">${t.count} users</span>
+      </div>`).join('');
+
+    document.getElementById('user-risk-cards').innerHTML = users.slice(0,6).map(u=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+        <div class="avatar" style="background:${riskColor(u.risk_score)};flex-shrink:0">${u.name[0]}</div>
+        <div style="flex:1">
+          <div style="font-size:.8rem;font-weight:600">${u.name}</div>
+          <div style="font-size:.7rem;color:var(--gray-400)">${u.email}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:.9rem;font-weight:700;color:${riskColor(u.risk_score)}">${u.risk_score}</div>
+          ${trustBadge(u.trust_level)}
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function loadTrafficDetail() {
+  try {
+    const res = await fetch(API+'/api/security/dashboard');
+    const data = await res.json();
+    const traffic = (data.traffic_data||[]).slice(-20).reverse();
+    document.getElementById('traffic-detail-chart').innerHTML = traffic.map(t=>`
+      <div class="chart-bar-row">
+        <span class="chart-bar-label">${formatTime(t.timestamp)}</span>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill" style="width:${Math.min((t.requests_per_min/200)*100,100)}%;background:${t.requests_per_min>150?'var(--red)':t.requests_per_min>80?'var(--yellow)':'var(--primary)'}"></div>
+        </div>
+        <span class="chart-bar-val">${t.requests_per_min} req/min</span>
+      </div>`).join('');
+    document.getElementById('blocked-today').textContent = traffic.reduce((a,t)=>a+t.blocked_requests,0);
+    document.getElementById('unique-ips').textContent = traffic.reduce((a,t)=>a+t.unique_ips,0);
+  } catch(e) {}
+}
+
+/* ── Attack Simulation ──────────────────────────────────────────────── */
+async function runSimulation(type, btn) {
+  btn.classList.add('running');
+  try {
+    const res = await fetch(API+'/api/simulate/attack', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({attack_type:type, target_user:'usr_003'})
+    });
+    const data = await res.json();
+    if (data.success) {
+      const container = document.getElementById('simulation-results');
+      const html = `
+        <div style="background:var(--red-light);border:1.5px solid var(--red);border-radius:10px;padding:16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="badge badge-red">${type.replace(/_/g,' ').toUpperCase()}</span>
+            <span style="font-size:.75rem;color:var(--gray-400)">${formatDate(data.timestamp)}</span>
+          </div>
+          ${data.results.map(r=>`<div style="font-size:.8rem;color:var(--gray-800);padding:6px 0;border-bottom:1px solid rgba(220,38,38,.15)">${r}</div>`).join('')}
+          <div style="font-size:.72rem;color:var(--gray-400);margin-top:8px">AI Engine responded: alert created, risk elevated, entity auto-blocked where applicable</div>
+        </div>`;
+      container.insertAdjacentHTML('afterbegin', html);
+      showToast('Simulation complete: '+type.replace(/_/g,' '),'critical');
+      setTimeout(refreshSecDashboard, 800);
+    }
+  } catch(e) {
+    showToast('Simulation failed - check backend connection','medium');
+  }
+  setTimeout(()=>btn.classList.remove('running'), 1500);
+}
+
+/* ── AI Audit ───────────────────────────────────────────────────────── */
+async function loadAuditReport() {
+  document.getElementById('audit-report-container').innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-400)">Running AI security audit...</div>';
+  try {
+    const res = await fetch(API+'/api/security/audit');
+    const report = await res.json();
+
+    const score = report.overall_security_score;
+    const scoreColor = score >= 70 ? 'var(--green)' : score >= 45 ? 'var(--yellow)' : 'var(--red)';
+    const sevColor = {critical:'badge-purple', high:'badge-red', medium:'badge-yellow', info:'badge-blue'};
+
+    document.getElementById('audit-report-container').innerHTML = `
+      <div style="display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap">
+        <div class="card" style="flex:1;min-width:200px;text-align:center">
+          <div style="font-size:3rem;font-weight:800;color:${scoreColor}">${score}</div>
+          <div style="font-size:.8rem;color:var(--gray-400);margin-top:4px">Security Score / 100</div>
+          <div style="font-size:.72rem;font-weight:600;color:${scoreColor};margin-top:8px">${score>=70?'GOOD POSTURE':score>=45?'NEEDS IMPROVEMENT':'CRITICAL RISK'}</div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px">
+          <div class="card-title" style="margin-bottom:12px">Audit Summary</div>
+          <div style="font-size:.8rem;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Total Findings</span><strong>${report.total_findings}</strong></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Blocked Entities</span><strong>${report.blocked_entities}</strong></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Audit Time</span><strong>${formatDate(report.audit_timestamp)}</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-card-header"><span class="table-card-title">Security Findings</span></div>
+        <table class="data-table">
+          <thead><tr><th>Severity</th><th>Finding</th><th>Recommendation</th></tr></thead>
+          <tbody>${(report.findings||[]).map(f=>`
+            <tr>
+              <td><span class="badge ${sevColor[f.severity]||'badge-gray'}">${f.severity}</span></td>
+              <td style="font-size:.78rem;max-width:240px">${f.finding}</td>
+              <td style="font-size:.78rem;color:var(--gray-600);max-width:280px">${f.recommendation}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;background:var(--primary-light);border-radius:10px;padding:14px 18px;font-size:.78rem;color:var(--primary)">
+        <strong>AI Recommendation:</strong> ${report.recommendation_summary}
+      </div>`;
+  } catch(e) {
+    document.getElementById('audit-report-container').innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-400)">Cannot reach backend server. Start the server and try again.</div>';
+  }
+}
+
+/* ── Alert Feed Helpers ─────────────────────────────────────────────── */
+function alertFeedItem(a) {
+  return `<div class="alert-item ${a.severity}">
+    <div class="alert-dot ${a.severity}"></div>
+    <div style="flex:1">
+      <div class="alert-text"><strong>${a.alert_type.replace(/_/g,' ')}</strong> — ${a.description.substring(0,90)}${a.description.length>90?'...':''}</div>
+      <div class="alert-time">${formatDate(a.timestamp)} &bull; User: ${a.user_id||'system'}</div>
+    </div>
+    ${severityBadge(a.severity)}
+  </div>`;
+}
+
+function appendAlertFeedItem(a) {
+  const feed = document.getElementById('alert-feed');
+  if (feed) { feed.insertAdjacentHTML('afterbegin', alertFeedItem(a)); }
+}
+
+/* ── Utility Helpers ────────────────────────────────────────────────── */
+function trustBadge(t) {
+  const map = {trusted:'badge-green', suspicious:'badge-yellow', dangerous:'badge-red'};
+  return `<span class="badge ${map[t]||'badge-gray'}">${t||'unknown'}</span>`;
+}
+function statusBadge(s) {
+  const map = {active:'badge-green', blocked:'badge-red', expired:'badge-gray'};
+  return `<span class="badge ${map[s]||'badge-gray'}">${s||'unknown'}</span>`;
+}
+function severityBadge(s) {
+  const map = {critical:'badge-purple', high:'badge-red', medium:'badge-yellow', low:'badge-green', info:'badge-blue'};
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+function badgeForType(t) {
+  const map = {credit:'badge-green', debit:'badge-red', transfer:'badge-blue'};
+  return `<span class="badge ${map[t]||'badge-gray'}">${t}</span>`;
+}
+function riskColor(score) {
+  if (score <= 25) return 'var(--green)';
+  if (score <= 60) return 'var(--yellow)';
+  return 'var(--red)';
+}
+function capitalize(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+function formatDate(ts) {
+  if (!ts) return '-';
+  try { return new Date(ts).toLocaleString('en-IN',{month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+  catch(e) { return ts; }
+}
+function formatTime(ts) {
+  if (!ts) return '-';
+  try { return new Date(ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+  catch(e) { return ts; }
+}
+
+/* ── Hero counter animation ─────────────────────────────────────────── */
+function animateCounter(el, target) {
+  let cur = 0;
+  const step = Math.ceil(target / 20);
+  const t = setInterval(()=>{
+    cur = Math.min(cur+step, target);
+    el.textContent = cur;
+    if (cur >= target) clearInterval(t);
+  }, 40);
+}
+
+/* ── Init ───────────────────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  animateCounter(document.getElementById('hero-active-sessions'), 24);
+  animateCounter(document.getElementById('hero-threats'), 7);
+
+  fetch(API+'/api/security/dashboard').then(r=>r.json()).then(data=>{
+    animateCounter(document.getElementById('hero-active-sessions'), data.metrics.active_sessions||24);
+    animateCounter(document.getElementById('hero-threats'), data.metrics.blocked_entities||7);
+  }).catch(()=>{});
+});
+</script>
+</body>
+</html>
